@@ -13,7 +13,7 @@
     "build": "yarn build:server && yarn build:frontend",
     "serve": "node dist/app.js",
     "build:server": "tsc",
-    "build:frontend": "cd client && npm run build"
+    "build:frontend": "cd client && yarn install && yarn build"
   },
   "dependencies": {
     "body-parser": "1.19.0",
