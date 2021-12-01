@@ -9,7 +9,7 @@
   "author": "Adrian Romanko",
   "license": "MIT",
   "scripts": {
-    "start": "node build/app.js",
+    "start": "node dist/server.js",
     "build": "yarn build:server && yarn build:frontend",
     "serve": "node dist/app.js",
     "build:server": "tsc",
