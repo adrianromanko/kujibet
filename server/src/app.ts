@@ -16,13 +16,13 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(lusca.xframe("SAMEORIGIN"));
 app.use(lusca.xssProtection(true));
 
-app.use(
-    express.static(path.join(process.cwd(), "client/build"), { maxAge: 31557600000 })
-);
+const rootPath = path.join(__dirname, "..", "..");
+const staticPath = path.join(rootPath, "client", "build");
 
-
-app.get("*", function (req, res) {
-    res.sendFile(path.join(process.cwd(), 'client/build', 'index.html'))
+console.log(`Serving static files from: ${staticPath}`);
+app.use("/", express.static(staticPath));
+app.get("*", (req, res) => {
+    res.sendFile(path.join(staticPath, "/index.html"));
 });
 
 

@@ -22,7 +22,6 @@ coverage
 
 # Dependency directory
 node_modules
-bower_components
 
 # Editors
 .idea
@@ -34,3 +33,5 @@ Thumbs.db
 
 # Ignore built ts files
 dist/**/*
+
+test-ledger

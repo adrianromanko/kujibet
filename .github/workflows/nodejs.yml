@@ -15,8 +15,10 @@ jobs:
         with:
           node-version: "14"
           cache: "yarn"
-      - run: yarn install
-      - run: yarn build
+      - run: |
+          cd server
+          yarn install
+          yarn build
       - name: Set up Cloud SDK
         uses: google-github-actions/setup-gcloud@master
         with:
