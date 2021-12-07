@@ -1,0 +1,21 @@
+# Note: This crate must be built using build.sh
+
+[package]
+name = "kujibet-solana-program"
+version = "0.0.1"
+description = "Kujibet Solana program"
+authors = [""]
+repository = ""
+license = "Apache-2.0"
+homepage = "https://kujibet.com/"
+edition = "2021"
+
+[features]
+no-entrypoint = []
+
+[dependencies]
+solana-program = "=1.6.6"
+
+[lib]
+crate-type = ["cdylib", "lib"]
+name = "kujibet_solana_program"
