@@ -13,7 +13,7 @@
     "server:build": "cd server && yarn build",
     "server:start": "cd server && yarn start",
     "server:install": "cd server && yarn install",
-    "install:all": "yarn client:install && yarn server:install",
+    "postinstall": "yarn client:install && yarn server:install",
     "build": "yarn server:build && yarn client:build",
     "start": "yarn server:start"
   }

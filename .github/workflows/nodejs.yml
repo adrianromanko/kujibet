@@ -16,7 +16,6 @@ jobs:
           node-version: "14"
           cache: "yarn"
       - run: |
-          cd server
           yarn install
           yarn build
       - name: Set up Cloud SDK
