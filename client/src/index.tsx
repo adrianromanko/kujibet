@@ -6,7 +6,7 @@ import { BrowserRouter } from 'react-router-dom';
 
 import 'styles/index.scss';
 
-import App from './app';
+import App from './App';
 import { WalletProvider } from 'providers/wallet';
 import { TransactionsProvider } from 'providers/transactions';
 import { GameStateProvider } from 'providers/game';
