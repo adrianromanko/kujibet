@@ -3,7 +3,7 @@ import * as THREE from 'three';
 import { FontLoader } from 'three/examples/jsm/loaders/FontLoader';
 import { TextGeometry } from 'three/examples/jsm/geometries/TextGeometry';
 import { AppConfig } from '../app.config';
-import logo from '../logo.png';
+import logo from '../images/logo.png';
 
 export const create = (): { renderer: THREE.WebGLRenderer; start: () => void } => {
     var img = new Image();

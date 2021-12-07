@@ -2,14 +2,14 @@ import { Account, PublicKey } from "@solana/web3.js";
 import path from "path";
 import fs from "fs";
 
-const DEPLOYED_PROGRAM_ADDRESS = process.env.DEPLOYED_PROGRAM_ADDRESS;
+const DEPLOYED_PROGRAM_ADDRESS = process.env.DEPLOYED_PROGRAM_ADDRESS || '3qRTEbakGobfqPBJnjskX9gP4wijargeDkctF5swj294';
 
 const PROGRAM_KEYPAIR_PATH = path.resolve(
   "..",
   "program",
   "target",
   "deploy",
-  "break_solana_program-keypair.json"
+  "kujibet_solana_program-keypair.json"
 );
 
 export const PROGRAM_ID = (() => {

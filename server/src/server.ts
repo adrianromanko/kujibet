@@ -18,6 +18,6 @@ const httpServer = app.listen(app.get("port"), () => {
 
 app.use(cors());
 app.use(express.json());
-// ApiServer.start(app, httpServer);
+ApiServer.start(app, httpServer);
 
 export default httpServer;

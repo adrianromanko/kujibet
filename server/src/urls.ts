@@ -3,13 +3,16 @@
 
 import { clusterApiUrl, Cluster } from "@solana/web3.js";
 
+const CLUSTER = process.env.CLUSTER || 'testnet';
+const LIVE = process.env.LIVE || true;
+
 function chooseCluster(): Cluster | undefined {
-  if (!process.env.LIVE) return;
-  switch (process.env.CLUSTER) {
+  if (!LIVE) return;
+  switch (CLUSTER) {
     case "devnet":
     case "testnet":
     case "mainnet-beta": {
-      return process.env.CLUSTER;
+      return CLUSTER;
     }
   }
   return "devnet";
@@ -19,8 +22,8 @@ export const cluster = chooseCluster();
 
 export const url =
   process.env.RPC_URL ||
-  (process.env.LIVE ? clusterApiUrl(cluster, false) : "http://localhost:8899");
+  (LIVE ? clusterApiUrl(cluster, false) : "http://localhost:8899");
 
 export const urlTls =
   process.env.RPC_URL ||
-  (process.env.LIVE ? clusterApiUrl(cluster, true) : "http://localhost:8899");
+  (LIVE ? clusterApiUrl(cluster, true) : "http://localhost:8899");
