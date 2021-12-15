@@ -26,19 +26,18 @@ export function ClusterModal() {
         <div className="modal-dialog modal-dialog-vertical">
           <div className="modal-content">
             <div className="modal-body" onClick={(e) => e.stopPropagation()}>
-              <span className="c-pointer" onClick={onClose}>
-                &times;
+              <span className="close" onClick={onClose}>
               </span>
 
               <h2 className="text-center mb-4 mt-4">Choose a Cluster</h2>
 
               <ClusterToggle />
 
-              <h2 className="text-center mb-4 mt-5">
+              {/* <h2 className="text-center mb-4 mt-5">
                 Override {serverName(server)} RPC
               </h2>
 
-              <CustomRpcInput />
+              <CustomRpcInput /> */}
             </div>
           </div>
         </div>
@@ -136,12 +135,12 @@ function ClusterToggle() {
           );
         })}
       </div>
-      {server === "custom" && (
+      {/* {server === "custom" && (
         <>
           <h2 className="text-center mb-4 mt-4">Break Server URL</h2>
           <CustomClusterInput />
         </>
-      )}
+      )} */}
     </>
   );
 }

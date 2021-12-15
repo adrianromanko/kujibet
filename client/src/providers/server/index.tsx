@@ -14,7 +14,7 @@ export const SERVERS: Server[] = [
   'mainnet-beta',
   'testnet',
   'devnet',
-  'custom'
+  // 'custom'
 ];
 
 const DEFAULT_CUSTOM_URL = `http://${window.location.hostname}:${
@@ -43,8 +43,8 @@ function parseQuery(query: URLSearchParams): Server {
       return 'testnet';
     case 'mainnet-beta':
       return 'mainnet-beta';
-    case 'custom':
-      return 'custom';
+    // case 'custom':
+    //   return 'custom';
     default:
       return DEFAULT_SERVER;
   }

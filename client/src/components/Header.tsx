@@ -14,26 +14,27 @@ export function Header() {
               style={{
                 display: 'flex',
                 flexDirection: 'row',
-                alignItems: 'center'
+                alignItems: 'center',
+                marginLeft: 10
               }}
             >
               <img src={kujiLogo} alt="break" className="break mr-3" />
-              <span style={{ fontSize: 20 }}>KUJIBET</span>
+              <span style={{ fontSize: 22 }}>KUJIBET</span>
             </div>
             <div className="col-auto">
               <div className="d-flex flex-row align-items-center">
                 <HeaderCTA />
-                <div className="d-md-inline-block d-none ml-3">
+                <div className="d-md-inline-block d-block">
                   <ClusterStatusButton />
                 </div>
-              </div>
+              </div> 
             </div>
           </div>
-          <div className="row align-items-center d-md-none mt-4">
+          {/* <div className="row align-items-center d-md-none mt-4">
             <div className="col-12">
               <ClusterStatusButton />
             </div>
-          </div>
+          </div> */}
         </div>
       </div>
     </div>
