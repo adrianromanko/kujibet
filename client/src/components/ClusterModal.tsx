@@ -16,7 +16,7 @@ import { useConfig } from "providers/server/http";
 export function ClusterModal() {
   const [show, setShow] = useClusterModal();
   const onClose = () => setShow(false);
-  const { server } = useServer();
+  // const { server } = useServer();
   return (
     <>
       <div
@@ -45,7 +45,7 @@ export function ClusterModal() {
     </>
   );
 }
-
+// eslint-disable-next-line
 function CustomRpcInput() {
   const [rpcUrl, setRpcUrl] = useRpcUrlState();
   const [editing, setEditing] = React.useState(false);
@@ -77,7 +77,7 @@ function CustomRpcInput() {
     />
   );
 }
-
+// eslint-disable-next-line
 function CustomClusterInput() {
   const [customUrl, setCustomUrl] = useCustomUrl();
   const [editing, setEditing] = React.useState(false);
