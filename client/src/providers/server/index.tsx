@@ -13,7 +13,7 @@ export const DEFAULT_SERVER = isLocalHost() ? 'testnet' : 'mainnet-beta';
 export const SERVERS: Server[] = [
   'mainnet-beta',
   'testnet',
-  'devnet',
+  'devnet'
   // 'custom'
 ];
 
@@ -104,9 +104,7 @@ function getServerUrl(server: Server, customUrl: string) {
       if (server === 'mainnet-beta') {
         slug = 'mainnet';
       }
-      return `${
-        useHttp ? 'http' : 'https'
-      }://break-solana-${slug}.herokuapp.com`;
+      return `${useHttp ? 'http' : 'https'}://kujibet.com`;
     }
   }
 }
