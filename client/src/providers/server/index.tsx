@@ -100,10 +100,6 @@ function getServerUrl(server: Server, customUrl: string) {
     }
     default: {
       const useHttp = isLocalHost();
-      let slug: string = server;
-      if (server === 'mainnet-beta') {
-        slug = 'mainnet';
-      }
       return `${useHttp ? 'http' : 'https'}://kujibet.com`;
     }
   }
