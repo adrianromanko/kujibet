@@ -6,7 +6,7 @@ import { HttpProvider } from './http';
 import { SocketProvider } from './socket';
 
 type Server = Cluster | 'custom';
-export const DEFAULT_SERVER = isLocalHost() ? 'testnet' : 'mainnet-beta';
+export const DEFAULT_SERVER = isLocalHost() ? 'custom' : 'testnet';
 // export const SERVERS: Server[] = isLocalHost()
 //   ? ["custom"]
 //   : ["mainnet-beta", "testnet", "devnet", "custom"];

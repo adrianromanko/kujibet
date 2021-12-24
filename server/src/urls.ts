@@ -4,7 +4,7 @@
 import { clusterApiUrl, Cluster } from "@solana/web3.js";
 
 const CLUSTER = process.env.CLUSTER || 'testnet';
-const LIVE = process.env.LIVE || true;
+const LIVE = process.env.LIVE;
 
 function chooseCluster(): Cluster | undefined {
   if (!LIVE) return;
