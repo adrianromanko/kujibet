@@ -112,9 +112,7 @@ export function useServer() {
   }
   const { server, customUrl } = context;
   const httpUrl = getServerUrl(server, customUrl);
-  const webSocketUrl = isLocalHost()
-    ? httpUrl.replace('http', 'ws')
-    : httpUrl.replace('https', 'wss');
+  const webSocketUrl = httpUrl.replace('http', 'ws');
 
   return {
     server,
