@@ -16,6 +16,6 @@
     "postinstall": "yarn client:install && yarn server:install",
     "program:build": "cd program && cargo build-bpf",
     "build": "yarn server:build && yarn client:build",
-    "start": "npm run server:start"
+    "start": "LIVE=true npm run server:start"
   }
 }
