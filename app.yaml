@@ -1,7 +1,12 @@
-runtime: nodejs14
+runtime: nodejs
+env: flex
 
 handlers:
 - url: /.*
   script: auto
   secure: always
   redirect_http_response_code: 301
+
+network:
+  session_affinity: true
+  instance_tag: websocket
