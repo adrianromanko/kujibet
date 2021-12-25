@@ -17,5 +17,8 @@
     "program:build": "cd program && cargo build-bpf",
     "build": "yarn server:build && yarn client:build",
     "start": "LIVE=true npm run server:start"
+  },
+  "engines": {
+    "node": "14.x"
   }
 }
