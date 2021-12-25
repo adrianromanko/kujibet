@@ -9,4 +9,3 @@ handlers:
 
 network:
   session_affinity: true
-  instance_tag: websocket
