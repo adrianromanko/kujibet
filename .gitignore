@@ -35,3 +35,5 @@ Thumbs.db
 dist/**/*
 
 test-ledger
+
+cert
