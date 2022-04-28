@@ -1,8 +1,8 @@
 runtime: nodejs14
-# env: flex
+env: flex
 
-# manual_scaling:
-#   instances: 1
+manual_scaling:
+  instances: 1
 
 handlers:
 - url: /.*

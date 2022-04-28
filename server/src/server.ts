@@ -18,7 +18,6 @@ const httpServer = app.listen(app.get("port"), () => {
 
 app.use(cors());
 app.use(express.json());
-app.set('trust proxy', true);
 ApiServer.start(app, httpServer);
 
 export default httpServer;
