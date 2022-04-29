@@ -16,13 +16,13 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(lusca.xframe("SAMEORIGIN"));
 app.use(lusca.xssProtection(true));
 
-app.use((req, res, next) => {
-    if (req.header("x-forwarded-proto") !== "https") {
-        res.redirect(`https://${req.header("host")}${req.url}`);
-    } else {
-        next();
-    }
-});
+// app.use((req, res, next) => {
+//     if (req.header("x-forwarded-proto") !== "https") {
+//         res.redirect(`https://${req.header("host")}${req.url}`);
+//     } else {
+//         next();
+//     }
+// });
 
 const rootPath = path.join(__dirname, "..", "..");
 const staticPath = path.join(rootPath, "client", "build");
