@@ -1,0 +1,39 @@
+name: Node CI
+
+on:
+  push:
+    branches:
+      - "master"
+
+jobs:
+  build-node:
+    runs-on: ubuntu-latest
+    env:
+      DEPLOYED_PROGRAM_ADDRESS: ${{ secrets.DEPLOYED_PROGRAM_ADDRESS }}
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v2
+        
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v2
+        with:
+            node-version: lts/*
+      - run: |
+          npm install
+          npm run build
+      - id: 'auth'
+        uses: 'google-github-actions/auth@v0'
+        with:
+          credentials_json: '${{ secrets.GCP_SA_KEY }}'
+
+      - name: 'Set up Cloud SDK'
+        uses: 'google-github-actions/setup-gcloud@v0'
+
+      - id: Deploy
+        uses: google-github-actions/deploy-appengine@v0
+        with:
+          project_id: '${{ secrets.GCP_PROJECT }}'
+
+      - name: show url
+        run: gcloud app describe

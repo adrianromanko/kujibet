@@ -1,0 +1,12 @@
+.idea/
+build/
+*.iml
+*.log
+/dist/
+node_modules
+keys
+
+
+solana transfer --from ~/.config/solana/id.json kxBgWfJvG3jM6R8g2dqZ1knNrbhM4tCnVzaw4zkhoKy 1 --fee-payer ~/.config/solana/id.json
+
+
