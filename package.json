@@ -19,6 +19,6 @@
     "start": "LIVE=true npm run server:start"
   },
   "engines": {
-    "node": ">=12.20.0"
+    "node": "12.20.0"
   }
 }
