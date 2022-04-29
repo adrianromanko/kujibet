@@ -30,9 +30,6 @@ jobs:
         uses: google-github-actions/deploy-appengine@v0
         with:
           project_id: '${{ secrets.GCP_PROJECT }}'
-          deliverables: 'app.yaml'
-          promote: false
-          version: 'v1'
-          
+
       - name: show url
         run: gcloud app describe
