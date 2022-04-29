@@ -12,19 +12,18 @@
 }
 
 .header-img-top {
-  width: 100%;
-  height: auto;
+  width: 100%; height: auto;
 }
 
 .header-body {
   padding-top: $header-spacing-y;
   padding-bottom: $header-spacing-y;
-  border-bottom: 1px solid black; //$header-body-border-width solid $header-body-border-color;
+  border-bottom: $header-body-border-width solid $header-body-border-color;
 }
 
 .header.bg-dark .header-body,
 .header.bg-hero .header-body {
-  border-bottom-color: black; // $header-body-border-color-dark;
+  border-bottom-color: $header-body-border-color-dark;
 }
 
 .header-footer {
@@ -34,7 +33,7 @@
 
 .header-pretitle {
   text-transform: uppercase;
-  letter-spacing: 0.08em;
+  letter-spacing: .08em;
   color: $text-muted;
 }
 

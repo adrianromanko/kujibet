@@ -12,6 +12,9 @@ export default class WebSocketServer {
     const wss = new WebSocket.Server({ server: httpServer });
     wss.on("connection", function connection(ws) {
       let isAlive = true;
+      let useRpc = true;
+      let rpcOverride: string;
+
       function heartbeat() {
         isAlive = true;
       }
@@ -27,7 +30,35 @@ export default class WebSocketServer {
         clearInterval(interval);
         activeUsers--;
       });
-      ws.on("message", tpuProxy.onTransaction);
+      ws.on("message", (data: Buffer, isBinary: boolean) => {
+        const message = isBinary ? data : data.toString();
+        if (typeof message === "string") {
+          if (message === "tpu") {
+            console.log("Client switched to TPU mode");
+            useRpc = false;
+          } else if (message === "rpc") {
+            console.log("Client switched to RPC mode");
+            useRpc = true;
+          } else {
+            try {
+              const rpcEndpoint = new URL(message);
+              rpcOverride = rpcEndpoint.toString();
+              console.log("Client overrode RPC endpoint to", rpcEndpoint.href);
+            } catch (err) {
+              console.warn("Ignoring client message", message);
+            }
+          }
+        } else {
+          tpuProxy.sendRawTransaction(
+            message,
+            useRpc,
+            rpcOverride,
+            (message: string) => {
+              ws.send(message);
+            }
+          );
+        }
+      });
       ws.on("pong", heartbeat);
     });
 
@@ -35,7 +66,7 @@ export default class WebSocketServer {
     setInterval(() => {
       wss.clients.forEach((client) => {
         if (client.readyState === WebSocket.OPEN) {
-          client.send(JSON.stringify({ activeUsers }));
+          client.send(JSON.stringify({ type: "heartbeat", activeUsers }));
         }
       });
     }, 1000);

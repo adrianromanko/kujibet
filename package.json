@@ -1,24 +1,29 @@
 {
-  "private": true,
-  "name": "kujibet",
-  "version": "0.0.2",
-  "workspaces": [
-    "server",
-    "client"
+  "name": "@kujibet/break",
+  "cacheDirectories": [
+    "client/node_modules",
+    "server/node_modules"
   ],
-  "repository": "git@github.com:adrianromanko/kujibet.git",
   "scripts": {
-    "client:build": "cd client && yarn build",
-    "client:install": "cd client && yarn install",
-    "server:build": "cd server && yarn build",
-    "server:start": "cd server && npm run start",
-    "server:install": "cd server && yarn install",
-    "postinstall": "yarn client:install && yarn server:install",
-    "program:build": "cd program && cargo build-bpf",
-    "build": "yarn server:build && yarn client:build",
-    "start": "LIVE=true npm run server:start"
+    "client:build": "./package.sh client run build",
+    "client:install": "./package.sh client install",
+    "server:build": "./package.sh server run build",
+    "server:start": "./package.sh server run start",
+    "server:install": "./package.sh server install",
+    "program:build": "./program/do.sh build",
+    "program:clean": "./program/do.sh clean",
+    "start": "RPC_URL=http://api.devnet.solana.com npm run server:start",
+    "build": "./package.sh both run build",
+    "lint": "./package.sh both run lint",
+    "lint:fix": "./package.sh both run lint:fix",
+    "format": "./package.sh both run format",
+    "format:fix": "./package.sh both run format:fix",
+    "postinstall": "./package.sh both install"
   },
-  "engines": {
-    "node": "14.x.x"
+  "dependencies": {
+    "node-sass": "7.0.1"
+  },
+  "devDependencies": {
+    "@types/three": "^0.139.0"
   }
 }

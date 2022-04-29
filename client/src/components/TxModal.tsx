@@ -7,7 +7,7 @@ import {
 import { useClusterParam } from "providers/server/http";
 import { useSlotTiming } from "providers/slot";
 import { timeElapsed } from "./TxTableRow";
-import { DEBUG_MODE } from "providers/transactions/confirmed";
+import { useClientConfig } from "providers/config";
 
 export function TransactionModal() {
   const selectedTx = useSelectedTransaction();
@@ -66,6 +66,7 @@ export function TransactionDetails({
     `https://explorer.solana.com/${path}?${clusterParam}`;
   const feeAddress = feeAccount.toBase58();
   const dataAddress = programAccount.toBase58();
+  const [{ showDebugTable }] = useClientConfig();
 
   function displaySignature() {
     return (
@@ -150,11 +151,18 @@ export function TransactionDetails({
     if (transaction.status === "timeout") {
       return <span className="text-warning">Timed out</span>;
     }
+    if (transaction.status === "failed") {
+      return (
+        <span className="text-danger ml-4 text-right">
+          {transaction.reason}
+        </span>
+      );
+    }
     if (transaction.status === "success") {
       const subscribed = transaction.timing.subscribed;
       if (subscribed !== undefined) {
         let confTime: string | undefined;
-        if (!DEBUG_MODE && transaction.timing.confirmed !== undefined) {
+        if (!showDebugTable && transaction.timing.confirmed !== undefined) {
           confTime = `${transaction.timing.confirmed}s`;
         } else if (transaction.slot.landed !== undefined) {
           const slotTiming = slotMetrics.current.get(transaction.slot.landed);

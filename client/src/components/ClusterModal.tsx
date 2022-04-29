@@ -11,12 +11,12 @@ import {
   useCustomUrl,
 } from "../providers/server";
 import { useRpcUrlState } from "providers/rpc";
-import { useConfig } from "providers/server/http";
+import { useServerConfig } from "providers/server/http";
 
 export function ClusterModal() {
   const [show, setShow] = useClusterModal();
   const onClose = () => setShow(false);
-  // const { server } = useServer();
+  const { server } = useServer();
   return (
     <>
       <div
@@ -26,18 +26,19 @@ export function ClusterModal() {
         <div className="modal-dialog modal-dialog-vertical">
           <div className="modal-content">
             <div className="modal-body" onClick={(e) => e.stopPropagation()}>
-              <span className="close" onClick={onClose}>
+              <span className="c-pointer" onClick={onClose}>
+                &times;
               </span>
 
               <h2 className="text-center mb-4 mt-4">Choose a Cluster</h2>
 
               <ClusterToggle />
 
-              {/* <h2 className="text-center mb-4 mt-5">
+              <h2 className="text-center mb-4 mt-5">
                 Override {serverName(server)} RPC
               </h2>
 
-              <CustomRpcInput /> */}
+              <CustomRpcInput />
             </div>
           </div>
         </div>
@@ -45,17 +46,22 @@ export function ClusterModal() {
     </>
   );
 }
-// eslint-disable-next-line
+
 function CustomRpcInput() {
   const [rpcUrl, setRpcUrl] = useRpcUrlState();
   const [editing, setEditing] = React.useState(false);
-  const configRpcUrl = useConfig()?.rpcUrl;
+  const configRpcUrl = useServerConfig()?.rpcUrl;
   const active = configRpcUrl !== rpcUrl;
 
   const customClass = (prefix: string) => (active ? `${prefix}-info` : "");
   const onUrlInput = useDebounceCallback((url: string) => {
     if (url.length > 0) {
-      setRpcUrl(url);
+      try {
+        new URL(url);
+        setRpcUrl(url);
+      } catch (err) {
+        // ignore bad url
+      }
     } else if (configRpcUrl) {
       setRpcUrl(configRpcUrl);
     }
@@ -77,7 +83,7 @@ function CustomRpcInput() {
     />
   );
 }
-// eslint-disable-next-line
+
 function CustomClusterInput() {
   const [customUrl, setCustomUrl] = useCustomUrl();
   const [editing, setEditing] = React.useState(false);
@@ -135,12 +141,12 @@ function ClusterToggle() {
           );
         })}
       </div>
-      {/* {server === "custom" && (
+      {server === "custom" && (
         <>
           <h2 className="text-center mb-4 mt-4">Break Server URL</h2>
           <CustomClusterInput />
         </>
-      )} */}
+      )}
     </>
   );
 }

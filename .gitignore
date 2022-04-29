@@ -1,39 +1,12 @@
-lib-cov
-*.seed
+.idea/
+build/
+*.iml
 *.log
-*.csv
-*.dat
-*.out
-*.pid
-*.gz
-*.swp
-
-pids
-logs
-results
-tmp
+/dist/
+node_modules
 keys
 
-# Build
-public/css/main.css
 
-# Coverage reports
-coverage
+solana transfer --from ~/.config/solana/id.json kxBgWfJvG3jM6R8g2dqZ1knNrbhM4tCnVzaw4zkhoKy 1 --fee-payer ~/.config/solana/id.json
 
-# Dependency directory
-node_modules
 
-# Editors
-.idea
-*.iml
-
-# OS metadata
-.DS_Store
-Thumbs.db
-
-# Ignore built ts files
-dist/**/*
-
-test-ledger
-
-cert

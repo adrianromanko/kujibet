@@ -1,12 +1,14 @@
 import * as React from "react";
 import { useThrottle } from "@react-hook/throttle";
 import { TransactionSignature, PublicKey } from "@solana/web3.js";
-import { ConfirmedHelper, DEBUG_MODE } from "./confirmed";
+import { ConfirmedHelper } from "./confirmed";
 import { TpsProvider, TpsContext } from "./tps";
 import { CreateTxContext, CreateTxProvider } from "./create";
 import { SelectedTxProvider } from "./selected";
 import { useConnection } from "providers/rpc";
 import { useSlotTiming } from "providers/slot";
+import { useClientConfig } from "providers/config";
+import { useFailureCallback } from "providers/server/socket";
 
 export type ReceivedRecord = {
   timestamp: number;
@@ -37,6 +39,12 @@ type TimeoutState = {
   details: TransactionDetails;
 };
 
+type FailedState = {
+  status: "failed";
+  reason: string;
+  details: TransactionDetails;
+};
+
 type PendingState = {
   status: "pending";
   details: TransactionDetails;
@@ -57,34 +65,22 @@ type SuccessState = {
   pending?: PendingTransaction;
 };
 
-export const COMMITMENT_PARAM = ((): TrackedCommitment => {
-  const commitment = new URLSearchParams(window.location.search).get(
-    "commitment"
-  );
-  switch (commitment) {
-    case "recent": {
-      return "processed";
-    }
-    case "processed": {
-      return commitment;
-    }
-    default: {
-      return "confirmed";
-    }
-  }
-})();
-
 export type TrackedCommitment = "processed" | "confirmed";
 
-export type TransactionStatus = "success" | "timeout" | "pending";
+export type TransactionStatus = "success" | "timeout" | "pending" | "failed";
 
-export type TransactionState = SuccessState | TimeoutState | PendingState;
+export type TransactionState =
+  | SuccessState
+  | TimeoutState
+  | PendingState
+  | FailedState;
 
 type NewTransaction = {
   type: "new";
   trackingId: number;
   details: TransactionDetails;
   pendingTransaction: PendingTransaction;
+  subscribed: number | undefined;
 };
 
 type UpdateIds = {
@@ -110,6 +106,12 @@ type TrackTransaction = {
 type TimeoutTransaction = {
   type: "timeout";
   trackingId: number;
+};
+
+type FailTransaction = {
+  type: "fail";
+  signature: string;
+  reason: string;
 };
 
 type ResetState = {
@@ -144,6 +146,7 @@ type Action =
   | NewTransaction
   | UpdateIds
   | TimeoutTransaction
+  | FailTransaction
   | ResetState
   | RecordRoot
   | TrackTransaction
@@ -155,11 +158,7 @@ type State = TransactionState[];
 function reducer(state: State, action: Action): State {
   switch (action.type) {
     case "new": {
-      const { details, pendingTransaction } = action;
-      let subscribed: number | undefined;
-      if (!DEBUG_MODE) {
-        subscribed = performance.now();
-      }
+      const { details, pendingTransaction, subscribed } = action;
       return [
         ...state,
         {
@@ -180,7 +179,7 @@ function reducer(state: State, action: Action): State {
       const transaction = state[trackingId];
       return state.map((tx) => {
         if (tx.details.signature === transaction.details.signature) {
-          if (tx.status !== "timeout") {
+          if (tx.status !== "timeout" && tx.status !== "failed") {
             return {
               ...tx,
               timing: {
@@ -200,7 +199,7 @@ function reducer(state: State, action: Action): State {
       const transaction = state[trackingId];
       return state.map((tx) => {
         if (tx.details.signature === transaction.details.signature) {
-          if (tx.status !== "timeout") {
+          if (tx.status !== "timeout" && tx.status !== "failed") {
             return {
               ...tx,
               received: [
@@ -284,6 +283,20 @@ function reducer(state: State, action: Action): State {
           return {
             status: "timeout",
             details: tx.details,
+          };
+        } else {
+          return tx;
+        }
+      });
+    }
+
+    case "fail": {
+      return state.map((tx) => {
+        if (tx.details.signature === action.signature) {
+          return {
+            status: "failed",
+            details: tx.details,
+            reason: action.reason,
           };
         } else {
           return tx;
@@ -423,7 +436,19 @@ type ProviderProps = { children: React.ReactNode };
 export function TransactionsProvider({ children }: ProviderProps) {
   const [state, dispatch] = React.useReducer(reducer, []);
   const connection = useConnection();
+  const [clientConfig] = useClientConfig();
   const stateRef = React.useRef(state);
+  const failureCallback = useFailureCallback();
+
+  React.useEffect(() => {
+    failureCallback.current = (signature, reason) => {
+      dispatch({
+        type: "fail",
+        reason,
+        signature,
+      });
+    };
+  }, [failureCallback, dispatch]);
 
   React.useEffect(() => {
     stateRef.current = state;
@@ -440,7 +465,7 @@ export function TransactionsProvider({ children }: ProviderProps) {
     });
 
     // Poll for signature statuses to determine which slot a tx landed in
-    const intervalId = DEBUG_MODE
+    const intervalId = clientConfig.showDebugTable
       ? setInterval(async () => {
           const fetchStatuses: string[] = [];
           stateRef.current.forEach((tx) => {
@@ -472,7 +497,12 @@ export function TransactionsProvider({ children }: ProviderProps) {
       connection.removeRootChangeListener(rootSubscription);
       intervalId !== undefined && clearInterval(intervalId);
     };
-  }, [connection]);
+  }, [
+    connection,
+    clientConfig.showDebugTable,
+    clientConfig.parallelization,
+    clientConfig.trackedCommitment,
+  ]);
 
   const [throttledState, setThrottledState] = useThrottle(state, 10);
   React.useEffect(() => {
@@ -551,12 +581,13 @@ export function useAvgConfirmationTime() {
     );
   }
 
+  const [{ showDebugTable }] = useClientConfig();
   const confirmedTimes = state.reduce((confirmedTimes: number[], tx) => {
     if (tx.status === "success") {
       const subscribed = tx.timing.subscribed;
       if (subscribed !== undefined) {
         let confTime: number | undefined;
-        if (!DEBUG_MODE && tx.timing.confirmed !== undefined) {
+        if (!showDebugTable && tx.timing.confirmed !== undefined) {
           confTime = tx.timing.confirmed;
         } else if (tx.slot.landed !== undefined) {
           const slotTiming = slotMetrics.current.get(tx.slot.landed);

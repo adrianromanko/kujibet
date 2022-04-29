@@ -1,27 +1,25 @@
 import * as React from "react";
-import { Account } from "@solana/web3.js";
+import { Keypair } from "@solana/web3.js";
 import { getLocalStorageKeypair } from "utils";
 import { useHistory, useLocation } from "react-router";
-import { useConfig } from "./server/http";
 
 interface State {
-  wallet?: Account;
-  selectWallet: (wallet: Account | undefined) => void;
+  wallet?: Keypair;
+  selectWallet: (wallet: Keypair | undefined) => void;
 }
 
 const StateContext = React.createContext<State | undefined>(undefined);
 
 type Props = { children: React.ReactNode };
 export function WalletProvider({ children }: Props) {
-  const [wallet, setWallet] = React.useState<Account>();
-  const config = useConfig();
+  const [wallet, setWallet] = React.useState<Keypair>();
 
   const history = useHistory();
   const location = useLocation();
   const selectWallet = React.useCallback(
-    (account: Account | undefined) => {
-      setWallet(account);
-      if (account === undefined) {
+    (keypair: Keypair | undefined) => {
+      setWallet(keypair);
+      if (keypair === undefined) {
         history.push({ ...location, pathname: "/wallet" });
       } else {
         history.push({ ...location, pathname: "/start" });
@@ -29,14 +27,6 @@ export function WalletProvider({ children }: Props) {
     },
     [history, location]
   );
-
-  React.useEffect(() => {
-    if (config?.airdropEnabled) {
-      setWallet(LOCAL_WALLET);
-    } else {
-      setWallet(undefined);
-    }
-  }, [config?.airdropEnabled]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const state = React.useMemo(
     () => ({

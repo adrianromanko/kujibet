@@ -1,11 +1,12 @@
-@import 'custom/app';
-@import 'custom/game';
-@import 'custom/home';
-@import 'custom/header';
-@import 'custom/payment-card';
-@import 'custom/results';
-@import 'custom/tx-container';
-@import 'custom/tx-square';
+@import "custom/app";
+@import "custom/game";
+@import "custom/home";
+@import "custom/header";
+@import "custom/payment-card";
+@import "custom/results";
+@import "custom/sidebar";
+@import "custom/tx-container";
+@import "custom/tx-square";
 
 .card-body,
 .card-header,
@@ -15,7 +16,6 @@
 
 .card-header {
   height: 50px;
-  background-color: #210e27;
 }
 
 .card {
@@ -60,14 +60,13 @@
 
 .btn-pink {
   &.btn-secondary {
-    border-color: darken($purple, 10%);
+    border-color: darken($pink, 10%);
   }
 
-  background-color: transparent; //$purple;
-  border: 1px solid $purple;
+  background-color: $pink;
 
   @include hover-focus {
-    background-color: darken($purple, 40%);
+    background-color: darken($pink, 10%);
   }
 }
 
@@ -97,32 +96,6 @@
 
 .c-pointer {
   cursor: pointer;
-}
-
-.close {
-  position: absolute;
-  left: 32px;
-  top: 32px;
-  width: 32px;
-  height: 32px;
-  opacity: 0.7;
-}
-.close:hover {
-  opacity: 1;
-}
-.close:before, .close:after {
-  position: absolute;
-  left: 15px;
-  content: ' ';
-  height: 33px;
-  width: 2px;
-  background-color: #ac62dc;
-}
-.close:before {
-  transform: rotate(45deg);
-}
-.close:after {
-  transform: rotate(-45deg);
 }
 
 .touch-action-none {
@@ -166,7 +139,12 @@
 
 .debug-row {
   cursor: pointer;
+
   &:hover {
     background: #111;
   }
+}
+
+.min-width-0 {
+  min-width: 0;
 }

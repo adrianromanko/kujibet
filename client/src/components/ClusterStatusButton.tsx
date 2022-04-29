@@ -1,12 +1,12 @@
-import React from 'react';
-import { useServer, useClusterModal } from '../providers/server';
+import React from "react";
+import { useServer, useClusterModal } from "../providers/server";
 
 function ClusterStatusButton() {
   const [, setShow] = useClusterModal();
   const { name } = useServer();
   return (
     <span
-      className="btn btn-pink lift d-block btn-info text-white"
+      className="btn lift d-block btn-info text-white"
       onClick={() => setShow(true)}
     >
       {name}

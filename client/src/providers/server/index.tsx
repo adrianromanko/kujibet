@@ -1,21 +1,15 @@
-import React from 'react';
-import { Cluster } from '@solana/web3.js';
-import { useLocation } from 'react-router-dom';
-import { isLocalHost } from '../../utils';
-import { HttpProvider } from './http';
-import { SocketProvider } from './socket';
+import React from "react";
+import { Cluster } from "@solana/web3.js";
+import { useLocation } from "react-router-dom";
+import { isLocalHost } from "../../utils";
+import { HttpProvider } from "./http";
+import { SocketProvider } from "./socket";
 
-type Server = Cluster | 'custom';
-export const DEFAULT_SERVER = isLocalHost() ? 'custom' : 'testnet';
-// export const SERVERS: Server[] = isLocalHost()
-//   ? ["custom"]
-//   : ["mainnet-beta", "testnet", "devnet", "custom"];
-export const SERVERS: Server[] = [
-  'mainnet-beta',
-  'testnet',
-  'devnet'
-  // 'custom'
-];
+type Server = Cluster | "custom";
+export const DEFAULT_SERVER = isLocalHost() ? "custom" : "devnet";
+export const SERVERS: Server[] = isLocalHost()
+  ? ["custom"]
+  : ["mainnet-beta", "testnet", "devnet", "custom"];
 
 const DEFAULT_CUSTOM_URL = `http://${window.location.hostname}:${
   process.env.PORT || 8080
@@ -23,28 +17,28 @@ const DEFAULT_CUSTOM_URL = `http://${window.location.hostname}:${
 
 export function serverName(server: Server): string {
   switch (server) {
-    case 'mainnet-beta':
-      return 'Mainnet Beta';
-    case 'testnet':
-      return 'Testnet';
-    case 'devnet':
-      return 'Devnet';
-    case 'custom':
-      return 'Custom';
+    case "mainnet-beta":
+      return "Mainnet Beta";
+    case "testnet":
+      return "Testnet";
+    case "devnet":
+      return "Devnet";
+    case "custom":
+      return "Custom";
   }
 }
 
 function parseQuery(query: URLSearchParams): Server {
-  const clusterParam = query.get('cluster');
+  const clusterParam = query.get("cluster");
   switch (clusterParam) {
-    case 'devnet':
-      return 'devnet';
-    case 'testnet':
-      return 'testnet';
-    case 'mainnet-beta':
-      return 'mainnet-beta';
-    // case 'custom':
-    //   return 'custom';
+    case "devnet":
+      return "devnet";
+    case "testnet":
+      return "testnet";
+    case "mainnet-beta":
+      return "mainnet-beta";
+    case "custom":
+      return "custom";
     default:
       return DEFAULT_SERVER;
   }
@@ -112,15 +106,13 @@ export function useServer() {
   }
   const { server, customUrl } = context;
   const httpUrl = getServerUrl(server, customUrl);
-  const webSocketUrl = isLocalHost()
-    ? httpUrl.replace('http', 'ws')
-    : httpUrl.replace('https', 'wss');
+  const webSocketUrl = httpUrl.replace("http", "ws");
 
   return {
     server,
     httpUrl,
     webSocketUrl,
-    name: serverName(server)
+    name: serverName(server),
   };
 }
 

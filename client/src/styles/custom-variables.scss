@@ -1,10 +1,8 @@
-$path-to-img: '../../images/dashkit' !default;
-$path-to-fonts: '../../fonts' !default;
+$path-to-img: "../../images/dashkit" !default;
+$path-to-fonts: "../../fonts" !default;
 
-$font-family-sans-serif: 'Exo 2', sans-serif !default;
+$font-family-sans-serif: "Exo 2", sans-serif !default;
 $font-family-base: $font-family-sans-serif !default;
-
-$body-bg: #202020;
 
 $border-radius: 0.125rem !default;
 $gray-700: #888 !default;
@@ -29,6 +27,7 @@ $warning: $pink;
 $primary: $green;
 
 $card-border-radius: 0.25rem !default;
+$card-outline-color: $gray-600-dark !default;
 $spacer: 1rem !default;
 
 $modal-md: 400px !default;

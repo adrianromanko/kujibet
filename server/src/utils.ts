@@ -1,3 +1,5 @@
+import * as Sentry from "@sentry/node";
+
 export function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
@@ -29,7 +31,9 @@ export function reportError(err: unknown, context: string): void {
   if (err instanceof Error) {
     console.error(context, err);
     if (process.env.NODE_ENV === "production") {
-      // capture
+      Sentry.captureException(err, {
+        tags: { context, cluster },
+      });
     }
   }
 }

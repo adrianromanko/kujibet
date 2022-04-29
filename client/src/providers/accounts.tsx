@@ -1,17 +1,18 @@
 import React from "react";
 import {
-  Account,
   Connection,
+  Keypair,
   PublicKey,
   sendAndConfirmTransaction,
   SystemProgram,
   Transaction,
 } from "@solana/web3.js";
 
-import { useConfig } from "providers/server/http";
+import { useServerConfig } from "providers/server/http";
 import { useConnection } from "providers/rpc";
 import { useWalletState } from "./wallet";
-import { FEE_PAYERS, sleep } from "utils";
+import { getFeePayers, sleep } from "utils";
+import { useClientConfig } from "./config";
 
 export type Status =
   | "initializing"
@@ -22,7 +23,7 @@ export type Status =
 
 export interface AccountsConfig {
   programAccounts: PublicKey[];
-  feeAccounts: Account[];
+  feePayerKeypairs: Keypair[];
   accountCapacity: number;
 }
 
@@ -52,7 +53,8 @@ export function AccountsProvider({ children }: Props) {
   const wallet = useWalletState().wallet;
   const creationLock = React.useRef(false);
   const calculationCounter = React.useRef(0);
-  const breakProgramId = useConfig()?.programId;
+  const breakProgramId = useServerConfig()?.programId;
+  const [{ parallelization }] = useClientConfig();
 
   React.useEffect(() => {
     calculationCounter.current++;
@@ -63,7 +65,10 @@ export function AccountsProvider({ children }: Props) {
     (async () => {
       while (true) {
         try {
-          const accountCosts = await calculateCosts(connection);
+          const accountCosts = await calculateCosts(
+            connection,
+            parallelization
+          );
           if (calculationCounter.current === savedCounter) {
             setCosts(accountCosts);
             setStatus((status) => {
@@ -72,8 +77,8 @@ export function AccountsProvider({ children }: Props) {
               }
               return status;
             });
-            return;
           }
+          return;
         } catch (err) {
           console.error("Failed to calculate account costs, retrying", err);
         }
@@ -81,7 +86,7 @@ export function AccountsProvider({ children }: Props) {
         await sleep(2000);
       }
     })();
-  }, [connection]);
+  }, [connection, parallelization]);
 
   const deactivate = React.useCallback(() => {
     if (!creationLock.current) setStatus("inactive");
@@ -99,13 +104,13 @@ export function AccountsProvider({ children }: Props) {
       creationLock.current = true;
       setStatus("closing");
       try {
-        await _closeAccounts(connection, wallet);
+        await _closeAccounts(connection, wallet, parallelization);
       } finally {
         setStatus("inactive");
         creationLock.current = false;
       }
     }
-  }, [creationLock, status, wallet, connection]);
+  }, [creationLock, status, wallet, connection, parallelization]);
 
   const createAccounts = React.useCallback(async () => {
     if (!connection) {
@@ -127,11 +132,14 @@ export function AccountsProvider({ children }: Props) {
           connection,
           breakProgramId,
           wallet,
-          costs
+          costs,
+          parallelization
         );
         setAccounts(newAccounts);
         setStatus("active");
       } catch (err) {
+        console.error("Failed to create accounts", err);
+        setAccounts(undefined);
         setStatus("inactive");
       } finally {
         creationLock.current = false;
@@ -139,7 +147,15 @@ export function AccountsProvider({ children }: Props) {
     } else {
       console.warn("Account creation requires inactive status", status);
     }
-  }, [creationLock, status, wallet, connection, breakProgramId, costs]);
+  }, [
+    creationLock,
+    status,
+    wallet,
+    connection,
+    breakProgramId,
+    costs,
+    parallelization,
+  ]);
 
   const state: State = React.useMemo(
     () => ({
@@ -167,15 +183,22 @@ export function useAccountsState() {
 }
 
 const TX_PER_BYTE = 8;
-const PROGRAM_ACCOUNT_SPACE = Math.ceil(1000 / FEE_PAYERS.length / TX_PER_BYTE);
-const TX_PER_ACCOUNT = TX_PER_BYTE * PROGRAM_ACCOUNT_SPACE;
+
+function calculateProgramAccountSpace(parallelization: number) {
+  return Math.ceil(1000 / parallelization / TX_PER_BYTE);
+}
+
+function calculateTransactionsPerAccount(programAccountSpace: number) {
+  return TX_PER_BYTE * programAccountSpace;
+}
 
 const _closeAccounts = async (
   connection: Connection,
-  payer: Account
+  payer: Keypair,
+  parallelization: number
 ): Promise<void> => {
   const tx = new Transaction();
-  const feePayers = FEE_PAYERS;
+  const feePayers = getFeePayers(parallelization);
   const balances = await Promise.all(
     feePayers.map((feePayer) => {
       return connection.getBalance(feePayer.publicKey);
@@ -196,82 +219,117 @@ const _closeAccounts = async (
 };
 
 const calculateCosts = async (
-  connection: Connection
+  connection: Connection,
+  parallelization: number
 ): Promise<AccountCosts> => {
-  const programAccountCost = await calculateMinimalRent(
-    connection,
-    PROGRAM_ACCOUNT_SPACE
+  const programAccountSpace = calculateProgramAccountSpace(parallelization);
+  const programAccountCost = await connection.getMinimumBalanceForRentExemption(
+    programAccountSpace
   );
-  const feeAccountRent = await calculateMinimalRent(connection, 0);
+  const feeAccountRent = await connection.getMinimumBalanceForRentExemption(0);
   const { feeCalculator } = await connection.getRecentBlockhash();
   const signatureFee = feeCalculator.lamportsPerSignature;
-  const feeAccountCost = TX_PER_ACCOUNT * signatureFee + feeAccountRent;
+  const txPerAccount = calculateTransactionsPerAccount(programAccountSpace);
+  const feeAccountCost = txPerAccount * signatureFee + feeAccountRent;
 
   return {
     feeAccountCost,
     programAccountCost,
-    total: FEE_PAYERS.length * (programAccountCost + feeAccountCost),
+    total: parallelization * (programAccountCost + feeAccountCost),
   };
 };
 
-const _createAccounts = async (
+const _createAccountBatch = async (
   connection: Connection,
   breakProgramId: PublicKey,
-  payer: Account,
-  costs: AccountCosts
-): Promise<AccountsConfig> => {
-  const tx = new Transaction();
-  const feePayers = FEE_PAYERS;
-  const programAccounts = [];
+  payer: Keypair,
+  costs: AccountCosts,
+  newFeePayers: Keypair[],
+  newProgramAccounts: Keypair[],
+  programAccountSpace: number
+) => {
+  const batchSize = newProgramAccounts.length;
+  if (batchSize !== newFeePayers.length) {
+    throw new Error("Internal error");
+  }
 
-  for (let i = 0; i < feePayers.length; i++) {
-    programAccounts.push(new Account());
+  const tx = new Transaction();
+  for (let i = 0; i < batchSize; i++) {
     tx.add(
       SystemProgram.createAccount({
         fromPubkey: payer.publicKey,
-        newAccountPubkey: programAccounts[i].publicKey,
+        newAccountPubkey: newProgramAccounts[i].publicKey,
         lamports: costs.programAccountCost,
-        space: PROGRAM_ACCOUNT_SPACE,
+        space: programAccountSpace,
         programId: breakProgramId,
       })
     );
     tx.add(
       SystemProgram.transfer({
         fromPubkey: payer.publicKey,
-        toPubkey: feePayers[i].publicKey,
+        toPubkey: newFeePayers[i].publicKey,
         lamports: costs.feeAccountCost,
       })
     );
   }
 
-  await sendAndConfirmTransaction(connection, tx, [payer, ...programAccounts]);
-
-  return {
-    accountCapacity: TX_PER_ACCOUNT,
-    feeAccounts: feePayers,
-    programAccounts: programAccounts.map((a) => a.publicKey),
-  };
+  let retries = 3;
+  while (retries > 0) {
+    try {
+      await sendAndConfirmTransaction(
+        connection,
+        tx,
+        [payer, ...newProgramAccounts],
+        { preflightCommitment: "confirmed" }
+      );
+      break;
+    } catch (err) {
+      retries -= 1;
+      if (retries === 0) {
+        throw new Error("Couldn't confirm transaction");
+      }
+      console.error(
+        `Failed to create accounts, retries remaining: ${retries}`,
+        err
+      );
+    }
+  }
 };
 
-const calculateMinimalRent = async (
+const _createAccounts = async (
   connection: Connection,
-  space: number
-): Promise<number> => {
-  const rentExemptBalance = await connection.getMinimumBalanceForRentExemption(
-    space
-  );
-  const slotsPerEpoch = 432_000;
-  // const { slotsPerEpoch } = await connection.getEpochSchedule();
-  const slotsPerSecond = 2.5;
-  const slotsPerYear = 365.25 * 24.0 * 60.0 * 60.0 * slotsPerSecond;
-  const epochsPerYear = slotsPerYear / slotsPerEpoch;
-  const paddingMultiplier = 2.0;
-  const rentPerEpoch = Math.round(
-    (paddingMultiplier * rentExemptBalance) / (2.0 * epochsPerYear)
-  );
+  breakProgramId: PublicKey,
+  payer: Keypair,
+  costs: AccountCosts,
+  parallelization: number
+): Promise<AccountsConfig> => {
+  const programAccountSpace = calculateProgramAccountSpace(parallelization);
+  const feePayers = getFeePayers(parallelization);
+  const programAccounts = Array(parallelization)
+    .fill(0)
+    .map(() => new Keypair());
 
-  // Create accounts with enough rent for 3 epochs. This ensures that even if
-  // accounts are created right before an epoch boundary, they will still be
-  // usable in the next epoch.
-  return Math.ceil(3 * rentPerEpoch);
+  const BATCH_SIZE = 5; // max size that can fit in one transaction
+
+  let accountIndex = 0;
+  while (accountIndex < parallelization) {
+    await _createAccountBatch(
+      connection,
+      breakProgramId,
+      payer,
+      costs,
+      feePayers.slice(accountIndex, accountIndex + BATCH_SIZE),
+      programAccounts.slice(accountIndex, accountIndex + BATCH_SIZE),
+      programAccountSpace
+    );
+
+    accountIndex += BATCH_SIZE;
+  }
+
+  const txPerAccount = calculateTransactionsPerAccount(programAccountSpace);
+  return {
+    accountCapacity: txPerAccount,
+    feePayerKeypairs: feePayers,
+    programAccounts: programAccounts.map((a) => a.publicKey),
+  };
 };

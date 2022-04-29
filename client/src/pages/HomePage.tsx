@@ -19,22 +19,22 @@ export const HomePage = () => {
   return (
     <div
       ref={rendererRef}
-      className="webgl-shell"
+      className='webgl-shell'
       style={{
         display: 'flex',
         justifyContent: 'center',
         width: '100%',
-        height: '100%'
+        height: '100%',
       }}
     >
       <Link
         style={{
           position: 'absolute',
           bottom: 100,
-          fontSize: 22
+          fontSize: 22,
         }}
-        className="btn btn-pink px-6 py-3 mb-5 text-uppercase"
-        to="/game"
+        className='btn btn-pink px-6 py-3 mb-5 text-uppercase'
+        to='/game'
       >
         Play
       </Link>
